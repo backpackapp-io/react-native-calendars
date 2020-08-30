@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import XDate from 'xdate';
 
 import React, {Component} from 'react';
-import {View, Text} from 'react-native';
+import {View, Text, TouchableWithoutFeedback} from 'react-native';
 
 import {isToday} from '../../dateutils';
 // @ts-expect-error
@@ -25,6 +25,8 @@ export interface ReservationProps {
   renderItem?: (reservation: AgendaEntry, isFirst: boolean) => React.Component | JSX.Element;
   /** specify how empty date content with no items should be rendered */
   renderEmptyDate?: (date?: XDate) => React.Component | JSX.Element;
+
+  openAddWorkScreenWithDate: (date: Date) => void;
 }
 
 class Reservation extends Component<ReservationProps> {
@@ -104,10 +106,11 @@ class Reservation extends Component<ReservationProps> {
 
   render() {
     const {item, date} = this.props;
-    
+
+    const firstItem = date ? true : false;
+
     let content;
     if (item) {
-      const firstItem = date ? true : false;
       if (isFunction(this.props.renderItem)) {
         content = this.props.renderItem(item, firstItem);
       }
@@ -116,10 +119,12 @@ class Reservation extends Component<ReservationProps> {
     }
 
     return (
-      <View style={this.style.container}>
-        {this.renderDate(date, item)}
-        <View style={this.style.innerContainer}>{content}</View>
-      </View>
+        <TouchableWithoutFeedback onPress = {() => this.props.openAddWorkScreenWithDate(date)}>
+          <View style={[this.style.container, {marginTop : firstItem ? 30 : 8}]}>
+            {this.renderDate(date, item)}
+            <View style={this.style.innerContainer}>{content}</View>
+          </View>
+        </TouchableWithoutFeedback>
     );
   }
 }
