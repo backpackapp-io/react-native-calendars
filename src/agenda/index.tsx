@@ -50,6 +50,8 @@ export type AgendaProps = CalendarListProps & ReservationListProps & {
   hideKnob?: boolean;
   /** When `true` and `hideKnob` prop is `false`, the knob will always be visible and the user will be able to drag the knob up and close the calendar. Default = false */
   showClosingKnob?: boolean;
+
+  openAddWorkScreenWithDate: (date: Date) => void;
 }
 
 type State = {

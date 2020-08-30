@@ -44,6 +44,10 @@ export type ReservationListProps = ReservationProps & {
   refreshing?: boolean;
   /** If provided, a standard RefreshControl will be added for "Pull to Refresh" functionality. Make sure to also set the refreshing prop correctly */
   onRefresh?: () => void;
+
+  openAddWorkScreenWithDate: (date: Date) => void;
+
+
 };
 
 interface DayAgenda {
