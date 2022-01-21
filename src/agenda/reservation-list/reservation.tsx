@@ -44,7 +44,9 @@ class Reservation extends Component<ReservationProps> {
     /** specify how each item should be rendered in agenda */
     renderItem: PropTypes.func,
     /** specify how empty date content with no items should be rendered */
-    renderEmptyDate: PropTypes.func
+    renderEmptyDate: PropTypes.func,
+
+    openAddWorkScreenWithDate: PropTypes.func
   };
 
   style;

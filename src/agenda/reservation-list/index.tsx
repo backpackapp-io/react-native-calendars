@@ -92,7 +92,10 @@ class ReservationList extends Component<ReservationListProps, State> {
     /** Set this true while waiting for new data from a refresh */
     refreshing: PropTypes.bool,
     /** If provided, a standard RefreshControl will be added for "Pull to Refresh" functionality. Make sure to also set the refreshing prop correctly */
-    onRefresh: PropTypes.func
+    onRefresh: PropTypes.func,
+
+    openAddWorkScreenWithDate: PropTypes.func
+
   };
   
   static defaultProps = {
