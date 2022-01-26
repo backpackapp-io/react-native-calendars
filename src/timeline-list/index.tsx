@@ -3,7 +3,7 @@ import React, {useCallback, useContext, useEffect, useRef, useState} from 'react
 import throttle from 'lodash/throttle';
 import XDate from 'xdate';
 
-import Context from '../expandableCalendar/Context';
+import {CalendarContext} from '../expandableCalendar/Context/Provider';
 import {UpdateSources} from '../expandableCalendar/commons';
 import {isToday} from '../dateutils';
 import Timeline, {TimelineProps} from '../timeline/Timeline';
@@ -39,7 +39,7 @@ export interface TimelineListProps {
 
 const TimelineList = (props: TimelineListProps) => {
   const {timelineProps, events, showNowIndicator, scrollToFirst, scrollToNow, initialTime} = props;
-  const {date, updateSource, setDate} = useContext(Context);
+  const {date, updateSource, setDate} = useContext(CalendarContext);
   const listRef = useRef<any>();
   const prevDate = useRef(date);
   const [timelineOffset, setTimelineOffset] = useState();

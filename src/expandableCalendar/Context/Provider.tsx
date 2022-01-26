@@ -7,9 +7,20 @@ import {StyleSheet, Animated, TouchableOpacity, View, StyleProp, ViewStyle} from
 import {toMarkingFormat} from '../../interface';
 import {Theme, DateData} from '../../types';
 import styleConstructor from '../style';
-import CalendarContext from '.';
 import Presenter from './Presenter';
 import {UpdateSources} from '../commons';
+
+interface CalendarContextProps {
+  date: string;
+  prevDate: string;
+  setDate: (date: string, source: UpdateSources) => void;
+  updateSource: UpdateSources;
+  setDisabled: (disable: boolean) => void;
+}
+
+// @ts-expect-error
+export const CalendarContext = React.createContext<CalendarContextProps>({});
+
 
 const TOP_POSITION = 65;
 
