@@ -95,12 +95,13 @@ export default function styleConstructor(theme: Theme = {}, calendarHeight: numb
       width: 1,
       height: '105%',
       backgroundColor: 'rgb(216,216,216)',
-      left: HOURS_SIDEBAR_WIDTH
+      left: HOURS_SIDEBAR_WIDTH,
+      ...theme.verticalLine
     },
     nowIndicator: {
       position: 'absolute',
       left: HOURS_SIDEBAR_WIDTH,
-      right: 0,
+      right: 0
     },
     nowIndicatorLine: {
       height: 1,

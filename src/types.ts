@@ -86,6 +86,7 @@ export interface Theme {
   arrowHeight?: number;
   arrowWidth?: number;
   weekVerticalMargin?: number;
+  verticalLine?: ViewStyle;
   'stylesheet.calendar.header'?: {
     week: StyleProp<ViewStyle>;
   };
@@ -95,8 +96,8 @@ export type AgendaEntry = {
   name: string;
   height: number;
   day: string;
-}
+};
 
 export type AgendaSchedule = {
   [date: string]: AgendaEntry[];
-}
+};
