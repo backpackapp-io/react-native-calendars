@@ -42,7 +42,7 @@ const TimelineList = (props: TimelineListProps) => {
   const {date, updateSource, setDate} = useContext(CalendarContext);
   const listRef = useRef<any>();
   const prevDate = useRef(date);
-  const [timelineOffset, setTimelineOffset] = useState();
+  const [timelineOffset, setTimelineOffset] = useState<number | undefined>();
 
   const {pages, pagesRef, resetPages, resetPagesDebounce, scrollToPageDebounce, shouldResetPages, isOutOfRange} =
     useTimelinePages({date, listRef});
@@ -62,6 +62,10 @@ const TimelineList = (props: TimelineListProps) => {
       prevDate.current = date;
     }
   }, [date, updateSource]);
+
+  useEffect(() => {
+    setTimelineOffset((timelineOffset ?? 0) + 1);
+  }, [events]);
 
   const onScroll = useCallback(() => {
     if (shouldResetPages.current) {
@@ -89,7 +93,7 @@ const TimelineList = (props: TimelineListProps) => {
     shouldResetPages.current = true;
   }, []);
 
-  const onTimelineOffsetChange = useCallback(offset => {
+  const onTimelineOffsetChange = useCallback((offset: number) => {
     setTimelineOffset(offset);
   }, []);
 
