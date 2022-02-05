@@ -6,11 +6,11 @@ import React, {Component} from 'react';
 import {View, Text, TouchableWithoutFeedback} from 'react-native';
 
 import {isToday} from '../../dateutils';
+import {getDefaultLocale} from '../../services';
 // @ts-expect-error
 import {RESERVATION_DATE} from '../../testIDs';
 import styleConstructor from './style';
 import {Theme, AgendaEntry} from '../../types';
-
 
 export interface ReservationProps {
   date?: XDate;
@@ -35,13 +35,9 @@ class Reservation extends Component<ReservationProps> {
   static propTypes = {
     date: PropTypes.any,
     item: PropTypes.any,
-    /** Specify theme properties to override specific styles for item's parts. Default = {} */
     theme: PropTypes.object,
-    /** specify your item comparison function for increased performance */
     rowHasChanged: PropTypes.func,
-    /** specify how each date should be rendered. day can be undefined if the item is not first in that day */
     renderDay: PropTypes.func,
-    /** specify how each item should be rendered in agenda */
     renderItem: PropTypes.func,
     /** specify how empty date content with no items should be rendered */
     renderEmptyDate: PropTypes.func,
@@ -62,7 +58,7 @@ class Reservation extends Component<ReservationProps> {
     const d2 = nextProps.date;
     const r1 = this.props.item;
     const r2 = nextProps.item;
-    
+
     let changed = true;
     if (!d1 && !d2) {
       changed = false;
@@ -88,7 +84,7 @@ class Reservation extends Component<ReservationProps> {
     }
 
     const today = date && isToday(date) ? this.style.today : undefined;
-    const dayNames = XDate.locales[XDate.defaultLocale].dayNamesShort;
+    const dayNames = getDefaultLocale().dayNamesShort;
 
     if (date) {
       return (
@@ -102,7 +98,7 @@ class Reservation extends Component<ReservationProps> {
         </View>
       );
     } else {
-      return <View style={this.style.day}/>;
+      return <View style={this.style.day} />;
     }
   }
 
@@ -121,12 +117,12 @@ class Reservation extends Component<ReservationProps> {
     }
 
     return (
-        <TouchableWithoutFeedback onPress = {() => this.props.openAddWorkScreenWithDate(date)}>
-          <View style={[this.style.container, {marginTop : firstItem ? 30 : 8}]}>
-            {this.renderDate(date, item)}
-            <View style={this.style.innerContainer}>{content}</View>
-          </View>
-        </TouchableWithoutFeedback>
+      <TouchableWithoutFeedback onPress={() => this.props.openAddWorkScreenWithDate(date?.toDate() ?? new Date())}>
+        <View style={[this.style.container, {marginTop: firstItem ? 30 : 8}]}>
+          {this.renderDate(date, item)}
+          <View style={this.style.innerContainer}>{content}</View>
+        </View>
+      </TouchableWithoutFeedback>
     );
   }
 }
