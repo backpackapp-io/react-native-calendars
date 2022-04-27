@@ -53,8 +53,9 @@ export type ReservationListProps = ReservationProps & {
   refreshing?: boolean;
   /** If provided, a standard RefreshControl will be added for "Pull to Refresh" functionality. Make sure to also set the refreshing prop correctly */
   onRefresh?: () => void;
-
   openAddWorkScreenWithDate: (date: Date) => void;
+  /** Extractor for underlying FlatList. Ensure that this is unique per item, or else scrolling may have duplicated and / or missing items.  */
+  reservationsKeyExtractor?: (item: DayAgenda, index: number) => string;
 };
 
 interface DayAgenda {
@@ -88,7 +89,8 @@ class ReservationList extends Component<ReservationListProps, State> {
     refreshing: PropTypes.bool,
     /** If provided, a standard RefreshControl will be added for "Pull to Refresh" functionality. Make sure to also set the refreshing prop correctly */
     onRefresh: PropTypes.func,
-    openAddWorkScreenWithDate: PropTypes.func
+    openAddWorkScreenWithDate: PropTypes.func,
+    reservationsKeyExtractor: PropTypes.func
   };
 
   static defaultProps = {
@@ -268,7 +270,9 @@ class ReservationList extends Component<ReservationListProps, State> {
     );
   };
 
-  keyExtractor = (_item: DayAgenda, index: number) => String(index);
+  keyExtractor = (item: DayAgenda, index: number) => {
+    return this.props.reservationsKeyExtractor?.(item, index) || `${item?.reservation?.day}${index}`;
+  };
 
   render() {
     const {items, selectedDay, theme, style} = this.props;
