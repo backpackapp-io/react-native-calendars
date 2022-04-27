@@ -3,7 +3,7 @@ import React, {useCallback, useContext, useEffect, useRef, useState} from 'react
 import throttle from 'lodash/throttle';
 import XDate from 'xdate';
 
-import {CalendarContext} from '../expandableCalendar/Context/Provider';
+import {CalendarContext} from '../expandableCalendar/Context';
 import {UpdateSources} from '../expandableCalendar/commons';
 import {isToday} from '../dateutils';
 import Timeline, {TimelineProps} from '../timeline/Timeline';

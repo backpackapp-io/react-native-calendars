@@ -9,5 +9,5 @@ export interface CalendarContextProps {
 }
 
 // @ts-expect-error
-const CalendarContext = React.createContext<CalendarContextProps>({});
+export const CalendarContext = React.createContext<CalendarContextProps>({});
 export default CalendarContext;
