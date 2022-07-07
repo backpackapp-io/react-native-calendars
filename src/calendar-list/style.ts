@@ -23,7 +23,8 @@ export default function getStyle(theme: Theme = {}) {
     },
     calendar: {
       paddingLeft: 15,
-      paddingRight: 15
+      paddingRight: 15,
+      marginTop: Platform.OS === "ios" ? 0 : -6,
     },
     staticHeader: {
       position: 'absolute',
