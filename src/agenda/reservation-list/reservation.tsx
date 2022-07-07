@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import XDate from 'xdate';
 
 import React, {Component} from 'react';
-import {View, Text, TouchableWithoutFeedback} from 'react-native';
+import {View, Text, TouchableWithoutFeedback, Platform} from 'react-native';
 
 import {isToday} from '../../dateutils';
 import {getDefaultLocale} from '../../services';
@@ -118,7 +118,7 @@ class Reservation extends Component<ReservationProps> {
 
     return (
       <TouchableWithoutFeedback onPress={() => this.props.openAddWorkScreenWithDate(date?.toDate() ?? new Date())}>
-        <View style={[this.style.container, {marginTop: firstItem ? 30 : 8}]}>
+        <View style={[this.style.container, {marginTop: firstItem ? Platform.OS === "ios" ? 30 : 12 : 8}]}>
           {this.renderDate(date, item)}
           <View style={this.style.innerContainer}>{content}</View>
         </View>
