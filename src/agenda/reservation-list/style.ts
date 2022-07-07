@@ -1,4 +1,4 @@
-import {StyleSheet} from 'react-native';
+import {StyleSheet, Platform} from 'react-native';
 import * as defaultStyle from '../../style';
 import {Theme} from '../../types';
 
@@ -25,7 +25,7 @@ export default function styleConstructor(theme: Theme = {}) {
       fontFamily: appStyle.textDayFontFamily,
       color: appStyle.agendaDayTextColor,
       backgroundColor: 'rgba(0,0,0,0)',
-      marginTop: -5,
+      marginTop: Platform.OS === "ios" ? -5 : -20,
     },
     day: {
       width: 63,
