@@ -1,9 +1,11 @@
+import PropTypes from 'prop-types';
+
 import get from 'lodash/get';
 import map from 'lodash/map';
 import isFunction from 'lodash/isFunction';
 import isUndefined from 'lodash/isUndefined';
+import debounce from 'lodash/debounce';
 
-import PropTypes from 'prop-types';
 import XDate from 'xdate';
 
 import React, {useCallback, useContext, useEffect, useRef} from 'react';
@@ -80,7 +82,8 @@ const AgendaList = (props: AgendaListProps) => {
     dayFormatter, 
     dayFormat = 'dddd, MMM d', 
     useMoment, 
-    markToday = true
+    markToday = true,
+    onViewableItemsChanged
   } = props;
   const {date, updateSource, setDate, setDisabled} = useContext(Context);
   const style = useRef(styleConstructor(theme));
@@ -93,7 +96,7 @@ const AgendaList = (props: AgendaListProps) => {
   useEffect(() => {
     if (date !== _topSection.current) {
       setTimeout(() => {
-        scrollToSection();
+        scrollToSection(date);
       }, 500);
     }
   }, []);
@@ -101,7 +104,7 @@ const AgendaList = (props: AgendaListProps) => {
   useEffect(() => {
     // NOTE: on first init data should set first section to the current date!!!
     if (updateSource !== UpdateSources.LIST_DRAG && updateSource !== UpdateSources.CALENDAR_INIT) {
-      scrollToSection();
+      scrollToSection(date);
     }
   }, [date]);
 
@@ -157,8 +160,8 @@ const AgendaList = (props: AgendaListProps) => {
     return sectionTitle;
   };
 
-  const scrollToSection = () => {
-    const sectionIndex = scrollToNextEvent ? getNextSectionIndex(date) : getSectionIndex(date);
+  const scrollToSection = useCallback(debounce((d) => {
+    const sectionIndex = scrollToNextEvent ? getNextSectionIndex(d) : getSectionIndex(d);
     if (isUndefined(sectionIndex)) {
       return;
     }
@@ -174,9 +177,9 @@ const AgendaList = (props: AgendaListProps) => {
         viewOffset: (constants.isAndroid ? sectionHeight.current : 0) + viewOffset
       });
     }
-  };
+  }, 1000, {leading: false, trailing: true}), []);
 
-  const onViewableItemsChanged = useCallback((info: {viewableItems: Array<ViewToken>; changed: Array<ViewToken>}) => {
+  const _onViewableItemsChanged = useCallback((info: {viewableItems: Array<ViewToken>; changed: Array<ViewToken>}) => {
     if (info?.viewableItems && !sectionScroll.current) {
       const topSection = get(info?.viewableItems[0], 'section.title');
       if (topSection && topSection !== _topSection.current) {
@@ -187,7 +190,8 @@ const AgendaList = (props: AgendaListProps) => {
         }
       }
     }
-  }, [_topSection.current, didScroll.current, avoidDateUpdates, setDate]);
+    onViewableItemsChanged?.(info);
+  }, [_topSection.current, didScroll.current, avoidDateUpdates, setDate, onViewableItemsChanged]);
 
   const _onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (!didScroll.current) {
@@ -244,7 +248,7 @@ const AgendaList = (props: AgendaListProps) => {
       ref={list}
       keyExtractor={_keyExtractor}
       showsVerticalScrollIndicator={false}
-      onViewableItemsChanged={onViewableItemsChanged}
+      onViewableItemsChanged={_onViewableItemsChanged}
       viewabilityConfig={viewabilityConfig}
       renderSectionHeader={_renderSectionHeader}
       onScroll={_onScroll}
@@ -264,7 +268,6 @@ export default AgendaList;
 
 AgendaList.displayName = 'AgendaList';
 AgendaList.propTypes = {
-  // ...SectionList.propTypes,
   dayFormat: PropTypes.string,
   dayFormatter: PropTypes.func,
   useMoment: PropTypes.bool,

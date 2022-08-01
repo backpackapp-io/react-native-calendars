@@ -4,7 +4,7 @@ import XDate from 'xdate';
 import React, {Component} from 'react';
 import {FlatList, View, ViewStyle, LayoutChangeEvent, FlatListProps} from 'react-native';
 
-import {extractComponentProps} from '../componentUpdater';
+import {extractHeaderProps} from '../componentUpdater';
 import {xdateToData, parseDate} from '../interface';
 import {page, sameDate, sameMonth} from '../dateutils';
 // @ts-expect-error
@@ -96,7 +96,10 @@ class CalendarList extends Component<CalendarListProps, State> {
     keyboardShouldPersistTaps: PropTypes.oneOf(['never', 'always', 'handled']),
     keyExtractor: PropTypes.func,
     onEndReachedThreshold: PropTypes.number,
-    onEndReached: PropTypes.func
+    /** Called once when the scroll position gets within onEndReachedThreshold */
+    onEndReached: PropTypes.func,
+    /** Enables nested scrolling for Android API level 21+ */
+    nestedScrollEnabled: PropTypes.bool
   };
 
   static defaultProps = {
@@ -109,7 +112,8 @@ class CalendarList extends Component<CalendarListProps, State> {
     scrollsToTop: false,
     scrollEnabled: true,
     removeClippedSubviews: constants.isAndroid,
-    keyExtractor: (_: any, index: number) => String(index)
+    keyExtractor: (_: any, index: number) => String(index),
+    nestedScrollEnabled: true
   };
 
   style: any;
@@ -120,7 +124,6 @@ class CalendarList extends Component<CalendarListProps, State> {
 
   constructor(props: CalendarListProps) {
     super(props);
-
     this.style = styleConstructor(props.theme);
 
     const rows = [];
@@ -166,7 +169,6 @@ class CalendarList extends Component<CalendarListProps, State> {
   static getDerivedStateFromProps(_: CalendarListProps, prevState: State) {
     const rowClone = prevState.rows;
     const newRows = [];
-
     for (let i = 0; i < rowClone.length; i++) {
       let val: XDate | string = prevState.texts[i];
       // @ts-expect-error
@@ -230,10 +232,8 @@ class CalendarList extends Component<CalendarListProps, State> {
   }
 
   addMonth = (count: number) => {
-    this.updateMonth(this.state.currentMonth.clone().addMonths(count, true));
-  };
-
-  updateMonth(day: XDate) {
+    const day = this.state.currentMonth.clone().addMonths(count, true);
+    
     if (sameMonth(day, this.state.currentMonth)) {
       return;
     }
@@ -287,12 +287,27 @@ class CalendarList extends Component<CalendarListProps, State> {
     });
   };
 
-  renderItem = ({item}: any) => {
-    const {calendarStyle, horizontal, calendarWidth, testID, ...others} = this.props;
+  getMarkedDatesForItem(item?: any) {
+    const {markedDates} = this.props;
+    
+    if (markedDates) {      
+      if (item && item.getTime) {
+        for (const [key, _] of Object.entries(markedDates)) {
+          if (sameMonth(new XDate(key), new XDate(item))) {
+            return markedDates;
+          }
+        }
+      }
+    }
+  }
 
+  renderItem = ({item}: any) => {
+    const {horizontal, calendarStyle, calendarWidth, testID, ...others} = this.props;
+    // NOTE: now only 'item' and 'markedDates' change for the 3 calendar (item.getTime) items
     return (
       <CalendarListItem
         {...others}
+        markedDates={this.getMarkedDatesForItem(item)}
         item={item}
         testID={`${testID}_${item}`}
         style={calendarStyle}
@@ -306,7 +321,7 @@ class CalendarList extends Component<CalendarListProps, State> {
   renderStaticHeader() {
     const {staticHeader, horizontal, headerStyle} = this.props;
     const useStaticHeader = staticHeader && horizontal;
-    const headerProps = extractComponentProps(CalendarHeader, this.props);
+    const headerProps = extractHeaderProps(this.props);
 
     if (useStaticHeader) {
       return (
@@ -352,6 +367,7 @@ class CalendarList extends Component<CalendarListProps, State> {
           keyExtractor={this.props.keyExtractor}
           onEndReachedThreshold={this.props.onEndReachedThreshold}
           onEndReached={this.props.onEndReached}
+          nestedScrollEnabled={this.props.nestedScrollEnabled}
         />
         {this.renderStaticHeader()}
       </View>
