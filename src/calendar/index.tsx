@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import XDate from 'xdate';
 
-import React, {useRef, useState, useEffect, useCallback} from 'react';
+import React, {useRef, useState, useEffect, useCallback, useMemo} from 'react';
 import {View, ViewStyle, StyleProp} from 'react-native';
 // @ts-expect-error
 import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
@@ -10,7 +10,7 @@ import constants from '../commons/constants';
 import {page, isGTE, isLTE, sameMonth} from '../dateutils';
 import {xdateToData, parseDate, toMarkingFormat} from '../interface';
 import {getState} from '../day-state-manager';
-import {extractComponentProps} from '../componentUpdater';
+import {extractHeaderProps, extractDayProps} from '../componentUpdater';
 // @ts-expect-error
 import {WEEK_NUMBER} from '../testIDs';
 import {DateData, Theme} from '../types';
@@ -19,7 +19,6 @@ import CalendarHeader, {CalendarHeaderProps} from './header';
 import Day, {DayProps} from './day/index';
 import BasicDay from './day/basic';
 import {MarkingProps} from './day/marking';
-
 
 type MarkedDatesType = {
   [key: string]: MarkingProps;
@@ -78,13 +77,37 @@ export interface CalendarProps extends CalendarHeaderProps, DayProps {
  * @gif: https://github.com/wix/react-native-calendars/blob/master/demo/assets/calendar.gif
  */
 const Calendar = (props: CalendarProps) => {
-  const {initialDate, current, theme, disableMonthChange, allowSelectionOutOfRange, minDate, maxDate, onDayPress, onDayLongPress, hideExtraDays, markedDates, firstDay, showSixWeeks, customHeader, headerStyle, displayLoadingIndicator, testID, enableSwipeMonths, accessibilityElementsHidden, importantForAccessibility, onMonthChange, onVisibleMonthsChange, style: propsStyle} = props;
+  const {
+    initialDate,
+    current,
+    theme,
+    markedDates,
+    minDate,
+    maxDate,
+    allowSelectionOutOfRange,
+    onDayPress,
+    onDayLongPress,
+    onMonthChange,
+    onVisibleMonthsChange,
+    disableMonthChange,
+    enableSwipeMonths,
+    hideExtraDays,
+    firstDay,
+    showSixWeeks,
+    displayLoadingIndicator,
+    customHeader,
+    headerStyle,
+    accessibilityElementsHidden,
+    importantForAccessibility,
+    testID,
+    style: propsStyle
+  } = props;
   const [currentMonth, setCurrentMonth] = useState(current || initialDate ? parseDate(current || initialDate) : new XDate());
   const style = useRef(styleConstructor(theme));
   const header = useRef();
   const isMounted = useRef(false);
+  const weekNumberMarking = useRef({disabled: true, disableTouchEvent: true});
  
-
   useEffect(() => {
     if (initialDate) {
       setCurrentMonth(parseDate(initialDate));
@@ -102,12 +125,12 @@ const Calendar = (props: CalendarProps) => {
     }
   }, [currentMonth]);
 
-  const updateMonth = (newMonth: XDate) => {
+  const updateMonth = useCallback((newMonth: XDate) => {
     if (sameMonth(newMonth, currentMonth)) {
       return;
     }
     setCurrentMonth(newMonth);
-  };
+  }, [currentMonth]);
 
   const addMonth = useCallback((count: number) => {
     const newMonth = currentMonth.clone().addMonths(count, true);
@@ -115,11 +138,9 @@ const Calendar = (props: CalendarProps) => {
   }, [currentMonth, updateMonth]);
 
   const handleDayInteraction = useCallback((date: DateData, interaction?: (date: DateData) => void) => {
-    const day = parseDate(date);
-    const min = parseDate(minDate);
-    const max = parseDate(maxDate);
+    const day = new XDate(date.dateString);
 
-    if (allowSelectionOutOfRange || !(min && !isGTE(day, min)) && !(max && !isLTE(day, max))) {
+    if (allowSelectionOutOfRange || !(minDate && !isGTE(day, new XDate(minDate))) && !(maxDate && !isLTE(day, new XDate(maxDate)))) {
       if (!disableMonthChange) {
         updateMonth(day);
       }
@@ -170,7 +191,7 @@ const Calendar = (props: CalendarProps) => {
       <View style={style.current.dayContainer} key={`week-container-${weekNumber}`}>
         <BasicDay
           key={`week-${weekNumber}`}
-          marking={{disabled: true, disableTouchEvent: true}}
+          marking={weekNumberMarking.current}
           // state='disabled'
           theme={theme}
           testID={`${WEEK_NUMBER}-${weekNumber}`}
@@ -182,10 +203,10 @@ const Calendar = (props: CalendarProps) => {
   };
 
   const renderDay = (day: XDate, id: number) => {
-    const dayProps = extractComponentProps(Day, props);
+    const dayProps = extractDayProps(props);
 
     if (!sameMonth(day, currentMonth) && hideExtraDays) {
-      return <View key={id} style={style.current.emptyDayContainer} />;
+      return <View key={id} style={style.current.emptyDayContainer}/>;
     }
 
     return (
@@ -232,17 +253,18 @@ const Calendar = (props: CalendarProps) => {
     return <View style={style.current.monthView}>{weeks}</View>;
   };
 
-  const renderHeader = () => {
-    let indicator;
-
+  const shouldDisplayIndicator = useMemo(() => {
     if (currentMonth) {
       const lastMonthOfDay = toMarkingFormat(currentMonth.clone().addMonths(1, true).setDate(1).addDays(-1));
       if (displayLoadingIndicator && !markedDates?.[lastMonthOfDay]) {
-        indicator = true;
+        return true;
       }
     }
+    return false;
+  }, [currentMonth, displayLoadingIndicator, markedDates]);
 
-    const headerProps = extractComponentProps(CalendarHeader, props);
+  const renderHeader = () => {
+    const headerProps = extractHeaderProps(props);
     const ref = customHeader ? undefined : header;
     const CustomHeader = customHeader;
     const HeaderComponent = customHeader ? CustomHeader : CalendarHeader;
@@ -255,7 +277,7 @@ const Calendar = (props: CalendarProps) => {
         ref={ref}
         month={currentMonth}
         addMonth={addMonth}
-        displayLoadingIndicator={indicator}
+        displayLoadingIndicator={shouldDisplayIndicator}
       />
     );
   };
@@ -307,7 +329,4 @@ Calendar.propTypes = {
   headerStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.number, PropTypes.array]),
   customHeader: PropTypes.any,
   allowSelectionOutOfRange: PropTypes.bool
-};
-Calendar.defaultProps = {
-  enableSwipeMonths: false
 };
