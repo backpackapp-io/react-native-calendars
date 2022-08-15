@@ -1,5 +1,5 @@
 const XDate = require('xdate');
-const {toMarkingFormat} = require('./interface');
+const {parseDate, toMarkingFormat} = require('./interface');
 const {getDefaultLocale} = require('./services');
 
 const latinNumbersPattern = /[0-9]/g;
@@ -26,8 +26,7 @@ export function sameDate(a?: XDate, b?: XDate) {
 
 export function sameWeek(a: string, b: string, firstDayOfWeek: number) {
   const weekDates = getWeekDates(a, firstDayOfWeek, 'yyyy-MM-dd');
-  const element = weekDates instanceof XDate ? new XDate(b) : b;
-  return weekDates?.includes(element);
+  return weekDates?.includes(b);
 }
 
 export function isPastDate(date: string) {
@@ -50,9 +49,8 @@ export function isPastDate(date: string) {
   return false;
 }
 
-export function isToday(date?: XDate | string) {
-  const d = date instanceof XDate ? date : new XDate(date);
-  return sameDate(d, XDate.today());
+export function isToday(date?: XDate) {
+  return sameDate(date, XDate.today());
 }
 
 export function isGTE(a: XDate, b: XDate) {
@@ -68,7 +66,7 @@ export function formatNumbers(date: any) {
   return numbers ? date.toString().replace(latinNumbersPattern, (char: any) => numbers[+char]) : date;
 }
 
-function fromTo(a: XDate, b: XDate): XDate[] {
+export function fromTo(a: XDate, b: XDate): XDate[] {
   const days: XDate[] = [];
   let from = +a;
   const to = +b;
@@ -79,13 +77,13 @@ function fromTo(a: XDate, b: XDate): XDate[] {
   return days;
 }
 
-export function month(date: XDate) { // exported for tests only
+export function month(date: XDate) {
   const year = date.getFullYear(),
     month = date.getMonth();
   const days = new XDate(year, month + 1, 0).getDate();
 
-  const firstDay: XDate = new XDate(year, month, 1, 0, 0, 0, true);
-  const lastDay: XDate = new XDate(year, month, days, 0, 0, 0, true);
+  const firstDay = new XDate(year, month, 1, 0, 0, 0, true);
+  const lastDay = new XDate(year, month, days, 0, 0, 0, true);
 
   return fromTo(firstDay, lastDay);
 }
@@ -139,32 +137,32 @@ export function page(date: XDate, firstDayOfWeek = 0, showSixWeeks = false) {
   return before.concat(days.slice(1, days.length - 1), after);
 }
 
-export function isDateNotInRange(date: XDate, minDate: string, maxDate: string) {
-  return (minDate && !isGTE(date, new XDate(minDate))) || (maxDate && !isLTE(date, new XDate(maxDate)));
+export function isDateNotInTheRange(minDate: XDate, maxDate: XDate, date: XDate) {
+  return (minDate && !isGTE(date, minDate)) || (maxDate && !isLTE(date, maxDate));
 }
 
 export function getWeekDates(date: string, firstDay = 0, format?: string) {
-  const d: XDate = new XDate(date);
-  if (date && d.valid()) {
-    const daysArray = [d];
-    let dayOfTheWeek = d.getDay() - firstDay;
+  if (date && parseDate(date).valid()) {
+    const current = parseDate(date);
+    const daysArray = [current];
+    let dayOfTheWeek = current.getDay() - firstDay;
     if (dayOfTheWeek < 0) {
       // to handle firstDay > 0
       dayOfTheWeek = 7 + dayOfTheWeek;
     }
 
-    let newDate = d;
+    let newDate = current;
     let index = dayOfTheWeek - 1;
     while (index >= 0) {
-      newDate = newDate.clone().addDays(-1);
+      newDate = parseDate(newDate).addDays(-1);
       daysArray.unshift(newDate);
       index -= 1;
     }
 
-    newDate = d;
+    newDate = current;
     index = dayOfTheWeek + 1;
     while (index < 7) {
-      newDate = newDate.clone().addDays(1);
+      newDate = parseDate(newDate).addDays(1);
       daysArray.push(newDate);
       index += 1;
     }
@@ -177,17 +175,7 @@ export function getWeekDates(date: string, firstDay = 0, format?: string) {
   }
 }
 
-export function getPartialWeekDates(date?: string, numberOfDays = 7) {
-  let index = 0;
-  const partialWeek: string[] = [];
-  while (index < numberOfDays) {
-    partialWeek.push(generateDay(date || new XDate(), index));
-    index++;
-  }
-  return partialWeek;
-}
-
-export function generateDay(originDate: string | XDate, daysOffset = 0) {
-  const baseDate = originDate instanceof XDate ? originDate : new XDate(originDate);
+export function generateDay(originDate: string, daysOffset = 0) {
+  const baseDate = new XDate(originDate);
   return toMarkingFormat(baseDate.clone().addDays(daysOffset));
 }

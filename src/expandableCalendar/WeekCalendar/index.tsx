@@ -6,7 +6,7 @@ import {Map} from 'immutable';
 import React, {Component} from 'react';
 import {FlatList, View, NativeSyntheticEvent, NativeScrollEvent} from 'react-native';
 
-import {extractCalendarProps} from '../../componentUpdater';
+import {extractComponentProps} from '../../componentUpdater';
 import {sameWeek} from '../../dateutils';
 import {toMarkingFormat} from '../../interface';
 import {DateData} from '../../types';
@@ -24,6 +24,9 @@ const applyAndroidRtlFix = constants.isAndroid && constants.isRTL;
 export interface WeekCalendarProps extends CalendarListProps {
   /** whether to have shadow/elevation for the calendar */
   allowShadow?: boolean;
+  /** whether to hide the names of the week days */
+  hideDayNames?: boolean;
+
   context?: any;
 }
 
@@ -41,7 +44,9 @@ class WeekCalendar extends Component<WeekCalendarProps, State> {
 
   static propTypes = {
     ...CalendarList.propTypes,
-    allowShadow: PropTypes.bool
+    current: PropTypes.any,
+    allowShadow: PropTypes.bool,
+    hideDayNames: PropTypes.bool
   };
 
   static defaultProps = {
@@ -60,15 +65,12 @@ class WeekCalendar extends Component<WeekCalendarProps, State> {
   };
 
   componentDidUpdate(prevProps: WeekCalendarProps) {
-    const {context, firstDay = 0} = this.props;
+    const {context} = this.props;
     const {shouldComponentUpdate, getDatesArray, scrollToIndex} = this.presenter;
 
-    if (shouldComponentUpdate(this.props.context, prevProps.context)) {
-      if (!sameWeek(context.date, prevProps.context.date, firstDay) || context.numberOfDays) {
-        // Don't update items if the new date is on the same week
-        this.setState({items: getDatesArray(this.props)});
-        scrollToIndex(false);
-      }
+    if (shouldComponentUpdate(context, prevProps.context)) {
+      this.setState({items: getDatesArray(this.props)});
+      scrollToIndex(false);
     }
   }
 
@@ -137,8 +139,8 @@ class WeekCalendar extends Component<WeekCalendarProps, State> {
   };
 
   renderItem = ({item}: any) => {
-    const {allowShadow, context, ...calendarListProps} = this.props;
-    const {style, onDayPress = this.onDayPress, firstDay = 0, ...others} = extractCalendarProps(calendarListProps);
+    const {style, onDayPress, markedDates, firstDay, ...others} = extractComponentProps(Week, this.props);
+    const {context} = this.props;
 
     const isSameWeek = sameWeek(item, context.date, firstDay);
     const currentContext = isSameWeek ? context : undefined;
@@ -150,10 +152,9 @@ class WeekCalendar extends Component<WeekCalendarProps, State> {
         current={item}
         firstDay={firstDay}
         style={this.getWeekStyle(this.containerWidth, style)}
-        onDayPress={onDayPress}
+        markedDates={markedDates}
+        onDayPress={onDayPress || this.onDayPress}
         context={currentContext}
-        numberOfDays={context.numberOfDays}
-        timelineLeftInset={context.timelineLeftInset}
       />
     );
   };

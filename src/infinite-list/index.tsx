@@ -1,10 +1,10 @@
-import inRange from 'lodash/inRange';
-import debounce from 'lodash/debounce';
-import noop from 'lodash/noop';
-
+// TODO: Make this a common component for all horizontal lists in this lib
 import React, {forwardRef, useCallback, useEffect, useMemo, useRef} from 'react';
 import {ScrollViewProps} from 'react-native';
 import {DataProvider, LayoutProvider, RecyclerListView, RecyclerListViewProps} from 'recyclerlistview';
+import inRange from 'lodash/inRange';
+import debounce from 'lodash/debounce';
+import noop from 'lodash/noop';
 
 import constants from '../commons/constants';
 import useCombinedRefs from '../commons/useCombinedRefs';
@@ -24,12 +24,10 @@ export interface InfiniteListProps
   initialPageIndex?: number;
   scrollViewProps?: ScrollViewProps;
   reloadPages?: (pageIndex: number) => void;
-  positionIndex?: number;
 }
 
 const InfiniteList = (props: InfiniteListProps, ref: any) => {
   const {
-    isHorizontal,
     renderItem,
     data,
     reloadPages = noop,
@@ -41,10 +39,8 @@ const InfiniteList = (props: InfiniteListProps, ref: any) => {
     onReachNearEdgeThreshold,
     initialPageIndex = 0,
     extendedState,
-    scrollViewProps,
-    positionIndex = 0
+    scrollViewProps
   } = props;
-
   const dataProvider = useMemo(() => {
     return dataProviderMaker(data);
   }, [data]);
@@ -68,19 +64,15 @@ const InfiniteList = (props: InfiniteListProps, ref: any) => {
 
   useEffect(() => {
     setTimeout(() => {
-      const x = isHorizontal ? Math.floor(data.length / 2) * pageWidth : 0;
-      const y = isHorizontal ? 0 : positionIndex * pageHeight;
       // @ts-expect-error
-      listRef.current?.scrollToOffset?.(x, y, false);
+      listRef.current?.scrollToOffset?.(Math.floor(data.length / 2) * pageWidth, 0, false);
     }, 0);
   }, [data]);
 
   const onScroll = useCallback(
     (event, offsetX, offsetY) => {
       reloadPagesDebounce?.cancel();
-
-      const {x, y} = event.nativeEvent.contentOffset;
-      const newPageIndex = Math.round(isHorizontal ? x / pageWidth : y / pageHeight);
+      const newPageIndex = Math.round(event.nativeEvent.contentOffset.x / pageWidth);
 
       if (pageIndex.current !== newPageIndex) {
         if (pageIndex.current !== undefined) {
@@ -99,14 +91,6 @@ const InfiniteList = (props: InfiniteListProps, ref: any) => {
             isNearEdge.current = true;
           }
         }
-
-        if (isHorizontal && constants.isAndroid) {
-          // NOTE: this is done only to handle 'onMomentumScrollEnd' not being called on Android
-          setTimeout(() => {
-            onMomentumScrollEnd(event);
-          }, 100);
-        }
-
         pageIndex.current = newPageIndex;
       }
 
@@ -117,17 +101,15 @@ const InfiniteList = (props: InfiniteListProps, ref: any) => {
 
   const onMomentumScrollEnd = useCallback(
     event => {
-      if (pageIndex.current) {
-        if (isOnEdge.current) {
-          onReachEdge?.(pageIndex.current!);
-          reloadPagesDebounce?.(pageIndex.current);
-        } else if (isNearEdge.current) {
-          reloadPagesDebounce?.(pageIndex.current);
-          onReachNearEdge?.(pageIndex.current!);
-        }
-
-        scrollViewProps?.onMomentumScrollEnd?.(event);
+      if (isOnEdge.current) {
+        onReachEdge?.(pageIndex.current!);
+        reloadPagesDebounce?.(pageIndex.current);
+      } else if (isNearEdge.current) {
+        reloadPagesDebounce?.(pageIndex.current);
+        onReachNearEdge?.(pageIndex.current!);
       }
+
+      scrollViewProps?.onMomentumScrollEnd?.(event);
     },
     [scrollViewProps?.onMomentumScrollEnd, onReachEdge, onReachNearEdge, reloadPagesDebounce]
   );
@@ -135,16 +117,6 @@ const InfiniteList = (props: InfiniteListProps, ref: any) => {
   const onScrollBeginDrag = useCallback(() => {
     scrolledByUser.current = true;
   }, []);
-
-  const scrollViewPropsMemo = useMemo(() => {
-    return {
-      pagingEnabled: isHorizontal,
-      bounces: false,
-      ...scrollViewProps,
-      onScrollBeginDrag,
-      onMomentumScrollEnd
-    };
-  }, [onScrollBeginDrag, onMomentumScrollEnd, scrollViewProps, isHorizontal]);
 
   const style = useMemo(() => {
     return {height: pageHeight};
@@ -154,7 +126,7 @@ const InfiniteList = (props: InfiniteListProps, ref: any) => {
     <RecyclerListView
       // @ts-expect-error
       ref={listRef}
-      isHorizontal={isHorizontal}
+      isHorizontal
       rowRenderer={renderItem}
       dataProvider={dataProvider}
       layoutProvider={layoutProvider.current}
@@ -163,7 +135,13 @@ const InfiniteList = (props: InfiniteListProps, ref: any) => {
       renderAheadOffset={5 * pageWidth}
       onScroll={onScroll}
       style={style}
-      scrollViewProps={scrollViewPropsMemo}
+      scrollViewProps={{
+        pagingEnabled: true,
+        bounces: false,
+        ...scrollViewProps,
+        onScrollBeginDrag,
+        onMomentumScrollEnd
+      }}
     />
   );
 };

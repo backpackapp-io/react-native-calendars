@@ -12,10 +12,6 @@ export default class AgendaScreen extends Component<State> {
     items: undefined
   };
 
-  // reservationsKeyExtractor = (item, index) => {
-  //   return `${item?.reservation?.day}${index}`;
-  // };
-
   render() {
     return (
       <Agenda
@@ -42,7 +38,6 @@ export default class AgendaScreen extends Component<State> {
         //renderDay={(day, item) => (<Text>{day ? day.day: 'item'}</Text>)}
         // hideExtraDays={false}
         // showOnlySelectedDayItems
-        // reservationsKeyExtractor={this.reservationsKeyExtractor}
       />
     );
   }

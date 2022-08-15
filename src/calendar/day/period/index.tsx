@@ -1,3 +1,4 @@
+import XDate from 'xdate';
 import PropTypes from 'prop-types';
 import React, {useCallback, useRef, useMemo} from 'react';
 import {TouchableWithoutFeedback, TouchableOpacity, Text, View, ViewStyle, ViewProps, TextStyle, StyleProp} from 'react-native';
@@ -30,7 +31,7 @@ type MarkingStyle = {
 
 const PeriodDay = (props: PeriodDayProps) => {
   const {theme, marking, date, onPress, onLongPress, state, accessibilityLabel, testID, children} = props;
-  const dateData = date ? xdateToData(date) : undefined;
+  const dateData = date ? xdateToData(new XDate(date)) : undefined;
   const style = useRef(styleConstructor(theme));
 
   const markingStyle = useMemo(() => {

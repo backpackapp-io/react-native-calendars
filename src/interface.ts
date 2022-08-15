@@ -7,8 +7,7 @@ export function padNumber(n: number) {
   return n;
 }
 
-export function xdateToData(date: XDate | string) {
-  const d = date instanceof XDate ? date : new XDate(date);
+export function xdateToData(d: XDate) {
   const dateString = toMarkingFormat(d);
   return {
     year: d.getFullYear(),
@@ -42,13 +41,5 @@ export function parseDate(d?: any) {
 }
 
 export function toMarkingFormat(d: XDate) {
-  if (!isNaN(d.getTime())) {
-    const year = `${d.getFullYear()}`;
-    const month = d.getMonth() + 1;
-    const doubleDigitMonth = month < 10 ? `0${month}` : `${month}`;
-    const day = d.getDate();
-    const doubleDigitDay = day < 10 ? `0${day}` : `${day}`;
-    return year + '-' + doubleDigitMonth + '-' + doubleDigitDay;
-  }
-  return 'Invalid Date';
+  return d.toString('yyyy-MM-dd');
 }

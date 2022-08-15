@@ -9,7 +9,7 @@ import {CalendarListProps} from '../../calendar-list';
 import CalendarContext from '../../expandableCalendar/Context';
 import styleConstructor from '../style';
 import {toMarkingFormat} from '../../interface';
-import {extractCalendarProps} from '../../componentUpdater';
+import {extractComponentProps} from '../../componentUpdater';
 import constants from '../../commons/constants';
 import {UpdateSources} from '../commons';
 import {sameWeek} from '../../dateutils';
@@ -76,8 +76,7 @@ const WeekCalendar = (props: WeekCalendarProps) => {
 
   const renderItem = useCallback(
     (_type: any, item: string) => {
-      const {allowShadow, ...calendarListProps} = props;
-      const {/* style,  */ ...others} = extractCalendarProps(calendarListProps);
+      const {/* style,  */ ...others} = extractComponentProps(Week, props);
 
       const isSameWeek = sameWeek(item, date, firstDay);
 
@@ -90,6 +89,7 @@ const WeekCalendar = (props: WeekCalendarProps) => {
           style={weekStyle}
           markedDates={markedDates}
           onDayPress={onDayPress}
+          // context={currentContext}
           context={context}
         />
       );
@@ -110,7 +110,6 @@ const WeekCalendar = (props: WeekCalendarProps) => {
       <View>
         <InfiniteList
           key="week-list"
-          isHorizontal
           ref={list}
           data={items}
           renderItem={renderItem}

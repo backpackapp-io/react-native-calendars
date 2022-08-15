@@ -45,7 +45,7 @@ export default function styleConstructor(theme: Theme = {}) {
       width: 40,
       height: 4,
       borderRadius: 3,
-      backgroundColor: appStyle.expandableKnobColor
+      backgroundColor: '#e8ecf0'
     },
     sectionText: {
       fontWeight: 'bold',
@@ -113,9 +113,6 @@ export default function styleConstructor(theme: Theme = {}) {
       paddingLeft: 15,
       flexDirection: 'row',
       justifyContent: 'space-around'
-    },
-    partialWeek: {
-      paddingRight: 0
     },
     dayContainer: {
       flex: 1,

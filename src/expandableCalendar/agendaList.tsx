@@ -1,11 +1,9 @@
-import PropTypes from 'prop-types';
-
 import get from 'lodash/get';
 import map from 'lodash/map';
 import isFunction from 'lodash/isFunction';
 import isUndefined from 'lodash/isUndefined';
-import debounce from 'lodash/debounce';
 
+import PropTypes from 'prop-types';
 import XDate from 'xdate';
 
 import React, {useCallback, useContext, useEffect, useRef} from 'react';
@@ -82,8 +80,7 @@ const AgendaList = (props: AgendaListProps) => {
     dayFormatter, 
     dayFormat = 'dddd, MMM d', 
     useMoment, 
-    markToday = true,
-    onViewableItemsChanged
+    markToday = true
   } = props;
   const {date, updateSource, setDate, setDisabled} = useContext(Context);
   const style = useRef(styleConstructor(theme));
@@ -96,7 +93,7 @@ const AgendaList = (props: AgendaListProps) => {
   useEffect(() => {
     if (date !== _topSection.current) {
       setTimeout(() => {
-        scrollToSection(date);
+        scrollToSection();
       }, 500);
     }
   }, []);
@@ -104,7 +101,7 @@ const AgendaList = (props: AgendaListProps) => {
   useEffect(() => {
     // NOTE: on first init data should set first section to the current date!!!
     if (updateSource !== UpdateSources.LIST_DRAG && updateSource !== UpdateSources.CALENDAR_INIT) {
-      scrollToSection(date);
+      scrollToSection();
     }
   }, [date]);
 
@@ -124,7 +121,7 @@ const AgendaList = (props: AgendaListProps) => {
     for (let j = 1; j < sections.length; j++) {
       const prev = parseDate(sections[j - 1]?.title);
       const next = parseDate(sections[j]?.title);
-      const cur = new XDate(date);
+      const cur = parseDate(date);
       if (isGTE(cur, prev) && isGTE(next, cur)) {
         i = sameDate(prev, cur) ? j - 1 : j;
         break;
@@ -153,15 +150,15 @@ const AgendaList = (props: AgendaListProps) => {
 
     if (markToday) {
       const string = getDefaultLocale().today || todayString;
-      const today = isToday(title);
+      const today = isToday(new XDate(title));
       sectionTitle = today ? `${string}, ${sectionTitle}` : sectionTitle;
     }
 
     return sectionTitle;
   };
 
-  const scrollToSection = useCallback(debounce((d) => {
-    const sectionIndex = scrollToNextEvent ? getNextSectionIndex(d) : getSectionIndex(d);
+  const scrollToSection = () => {
+    const sectionIndex = scrollToNextEvent ? getNextSectionIndex(date) : getSectionIndex(date);
     if (isUndefined(sectionIndex)) {
       return;
     }
@@ -177,9 +174,9 @@ const AgendaList = (props: AgendaListProps) => {
         viewOffset: (constants.isAndroid ? sectionHeight.current : 0) + viewOffset
       });
     }
-  }, 1000, {leading: false, trailing: true}), []);
+  };
 
-  const _onViewableItemsChanged = useCallback((info: {viewableItems: Array<ViewToken>; changed: Array<ViewToken>}) => {
+  const onViewableItemsChanged = useCallback((info: {viewableItems: Array<ViewToken>; changed: Array<ViewToken>}) => {
     if (info?.viewableItems && !sectionScroll.current) {
       const topSection = get(info?.viewableItems[0], 'section.title');
       if (topSection && topSection !== _topSection.current) {
@@ -190,8 +187,7 @@ const AgendaList = (props: AgendaListProps) => {
         }
       }
     }
-    onViewableItemsChanged?.(info);
-  }, [_topSection.current, didScroll.current, avoidDateUpdates, setDate, onViewableItemsChanged]);
+  }, [_topSection.current, didScroll.current, avoidDateUpdates, setDate]);
 
   const _onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (!didScroll.current) {
@@ -248,7 +244,7 @@ const AgendaList = (props: AgendaListProps) => {
       ref={list}
       keyExtractor={_keyExtractor}
       showsVerticalScrollIndicator={false}
-      onViewableItemsChanged={_onViewableItemsChanged}
+      onViewableItemsChanged={onViewableItemsChanged}
       viewabilityConfig={viewabilityConfig}
       renderSectionHeader={_renderSectionHeader}
       onScroll={_onScroll}
@@ -268,6 +264,7 @@ export default AgendaList;
 
 AgendaList.displayName = 'AgendaList';
 AgendaList.propTypes = {
+  // ...SectionList.propTypes,
   dayFormat: PropTypes.string,
   dayFormatter: PropTypes.func,
   useMoment: PropTypes.bool,
