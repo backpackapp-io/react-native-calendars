@@ -91,34 +91,27 @@ const CalendarProvider = (props: CalendarContextProviderProps) => {
   }, [todayBottomMargin, currentDate]);
 
   /** Context */
+  const _setDate = useCallback((date: string, updateSource: UpdateSources) => {
+    prevDate.current = currDate.current;
+    currDate.current = date;
+    setCurrentDate(date);
+    setUpdateSource(updateSource);
+    setButtonIcon(getButtonIcon(date, showTodayButton));
 
-  const _setDate = useCallback(
-    (date: string, updateSource: UpdateSources) => {
-      prevDate.current = currDate.current;
-      currDate.current = date;
-      setCurrentDate(date);
-      setUpdateSource(updateSource);
-      setButtonIcon(getButtonIcon(date, showTodayButton));
+    onDateChanged?.(date, updateSource);
 
-      onDateChanged?.(date, updateSource);
+    if (!sameMonth(new XDate(date), new XDate(prevDate.current))) {
+      onMonthChange?.(xdateToData(new XDate(date)), updateSource);
+    }
+  }, [onDateChanged, onMonthChange]);
 
-      if (!sameMonth(new XDate(date), new XDate(date))) {
-        onMonthChange?.(xdateToData(new XDate(date)), updateSource);
-      }
-    },
-    [onDateChanged, onMonthChange]
-  );
-
-  const _setDisabled = useCallback(
-    (disabled: boolean) => {
-      if (!showTodayButton || disabled === isDisabled) {
-        return;
-      }
-      setIsDisabled(disabled);
-      animateOpacity(disabled);
-    },
-    [showTodayButton]
-  );
+  const _setDisabled = useCallback((disabled: boolean) => {
+    if (!showTodayButton || disabled === isDisabled) {
+      return;
+    }
+    setIsDisabled(disabled);
+    animateOpacity(disabled);
+  }, [showTodayButton, isDisabled]);
 
   const contextValue = useMemo(() => {
     return {
@@ -130,7 +123,7 @@ const CalendarProvider = (props: CalendarContextProviderProps) => {
       numberOfDays,
       timelineLeftInset
     };
-  }, [currentDate, updateSource, numberOfDays]);
+  }, [currentDate, updateSource, numberOfDays, _setDisabled]);
 
   /** Animations */
 
